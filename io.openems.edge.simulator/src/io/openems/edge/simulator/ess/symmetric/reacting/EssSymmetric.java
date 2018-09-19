@@ -157,6 +157,15 @@ public class EssSymmetric extends AbstractOpenemsComponent
 		} else {
 			this.getAllowedDischarge().setNextValue(this.maxApparentPower);
 		}
+		/*
+		 * calculate cumulated values
+		 */
+		if (watthours < 0) {
+			this.getActiveChargeEnergy().setNextValue(this.getActiveChargeEnergy().getNextValue().get() - watthours);
+		} else if (watthours > 0) {
+			this.getActiveDischargeEnergy()
+					.setNextValue(this.getActiveDischargeEnergy().getNextValue().get() + watthours);
+		}
 	}
 
 	@Override
