@@ -161,10 +161,11 @@ public class EssSymmetric extends AbstractOpenemsComponent
 		 * calculate cumulated values
 		 */
 		if (watthours < 0) {
-			this.getActiveChargeEnergy().setNextValue(this.getActiveChargeEnergy().getNextValue().get() - watthours);
+			this.getActiveChargeEnergy().setNextValue(this.getActiveChargeEnergy().value().get() == null ? 0
+					: this.getActiveChargeEnergy().value().get() - watthours);
 		} else if (watthours > 0) {
-			this.getActiveDischargeEnergy()
-					.setNextValue(this.getActiveDischargeEnergy().getNextValue().get() + watthours);
+			this.getActiveDischargeEnergy().setNextValue(this.getActiveDischargeEnergy().value().get() == null ? 0
+					: this.getActiveDischargeEnergy().value().get() + watthours);
 		}
 	}
 

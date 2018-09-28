@@ -31,6 +31,7 @@ import com.google.gson.JsonObject;
 
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.timedata.Tag;
+import io.openems.common.types.ChannelAddress;
 import io.openems.edge.common.channel.doc.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -176,4 +177,10 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 		// ignore edgeId
 		return this.influxConnector.queryHistoricData(fromDate, toDate, channels, resolution, tags);
 	}
+
+	@Override
+	public Optional<Object> getHistoricChannelValue(ChannelAddress channelAddress, ZonedDateTime at) {
+		return this.influxConnector.getHistoricChannelValue(channelAddress, at);
+	}
+
 }

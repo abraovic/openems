@@ -23,9 +23,9 @@ public abstract class ChannelsFunction<C extends OpenemsComponent, T> {
 
 	protected final Map<String, Value<T>> valueMap = new ConcurrentHashMap<>();
 
-	public ChannelsFunction(OpenemsComponent parent, ChannelId targetChannelId, ChannelId sourceChannelId) {
+	public ChannelsFunction(OpenemsComponent parent, ChannelId targetChannelId, ChannelId defaultSourceChannelId) {
 		this.targetChannel = parent.channel(targetChannelId);
-		this.sourceChannelId = sourceChannelId;
+		this.sourceChannelId = defaultSourceChannelId;
 	}
 
 	public void addComponent(C component) {
@@ -37,6 +37,18 @@ public abstract class ChannelsFunction<C extends OpenemsComponent, T> {
 			this.recalculateValue();
 		};
 		Channel<T> channel = component.channel(this.sourceChannelId);
+		handler.accept(channel.getNextValue()); // handle current value
+		channel.onSetNextValue(handler); // and every upcoming value
+	}
+
+	public void addChannel(Channel<T> channel) {
+		if (this.debug) {
+			log.info("Add irregular channel [" + channel.address() + "] of type [" + channel.getType() + "]");
+		}
+		final Consumer<Value<T>> handler = value -> {
+			this.valueMap.put(channel.address().toString(), value);
+			this.recalculateValue();
+		};
 		handler.accept(channel.getNextValue()); // handle current value
 		channel.onSetNextValue(handler); // and every upcoming value
 	}
@@ -62,6 +74,6 @@ public abstract class ChannelsFunction<C extends OpenemsComponent, T> {
 			this.targetChannel.setNextValue(null);
 		}
 	}
-	
+
 	protected abstract double calculate() throws NoSuchElementException;
 }

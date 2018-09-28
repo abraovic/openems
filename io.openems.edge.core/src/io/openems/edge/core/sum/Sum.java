@@ -24,11 +24,12 @@ import io.openems.edge.common.channel.merger.SumInteger;
 import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.MetaEss;
+import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.ess.dccharger.api.EssDcCharger;
 import io.openems.edge.meter.api.SymmetricMeter;
+import io.openems.edge.timedata.influxdb.channel.IntegerTimedataChannel;
 
 /**
  * Enables access to sum/average data.
@@ -62,6 +63,132 @@ public class Sum extends AbstractOpenemsComponent implements OpenemsComponent {
 				.type(OpenemsType.INTEGER) //
 				.unit(Unit.WATT) //
 				.text(ManagedSymmetricEss.POWER_DOC_TEXT)),
+		/**
+		 * Ess: Active Charge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_CHARGE_ENERGY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Active Discharge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_DISCHARGE_ENERGY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Daily Active Charge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_CHARGE_ENERGY_DAILY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Active Charge Energy until end of last day
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_CHARGE_ENERGY_LAST_DAY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Daily Active Discharge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_DISCHARGE_ENERGY_DAILY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Monthly Active Charge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_CHARGE_ENERGY_MONTHLY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Monthly Active Discharge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_DISCHARGE_ENERGY_MONTHLY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Yearly Active Charge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_CHARGE_ENERGY_YEARLY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
+		/**
+		 * Ess: Yearly Active Discharge Energy
+		 * 
+		 * <ul>
+		 * <li>Interface: Sum (origin: @see {@link SymmetricEssReadonly}) TODO: sort
+		 * out, what to refer to here
+		 * <li>Type: Integer
+		 * <li>Unit: Wh
+		 * <li>Range: positive
+		 * </ul>
+		 */
+		ESS_ACTIVE_DISCHARGE_ENERGY_YEARLY(new Doc() //
+				.type(OpenemsType.INTEGER) //
+				.unit(Unit.WATT_HOURS)),
 		/**
 		 * Grid: Active Power
 		 * 
@@ -228,6 +355,15 @@ public class Sum extends AbstractOpenemsComponent implements OpenemsComponent {
 	private final List<SymmetricEss> esss = new CopyOnWriteArrayList<>();
 	private final AverageInteger<SymmetricEss> essSoc;
 	private final SumInteger<SymmetricEss> essActivePower;
+	private final SumInteger<SymmetricEss> essActiveChargeEnergy;
+	private final SumInteger<SymmetricEss> essActiveDischargeEnergy;
+	private final SumInteger<Sum> essActiveChargeEnergyDaily;
+	private final IntegerTimedataChannel essActiveChargeEnergyLastDay = null;
+	// private final SumInteger<SymmetricEss> essActiveDischargeEnergyDaily;
+	// private final SumInteger<SymmetricEss> essActiveChargeEnergyMonthly;
+	// private final SumInteger<SymmetricEss> essActiveDischargeEnergyMonthly;
+	// private final SumInteger<SymmetricEss> essActiveChargeEnergyYearly;
+	// private final SumInteger<SymmetricEss> essActiveDischargeEnergyYearly;
 
 	/*
 	 * Grid
@@ -253,6 +389,8 @@ public class Sum extends AbstractOpenemsComponent implements OpenemsComponent {
 		this.esss.add(ess);
 		this.essSoc.addComponent(ess);
 		this.essActivePower.addComponent(ess);
+		this.essActiveChargeEnergy.addComponent(ess);
+		this.essActiveDischargeEnergy.addComponent(ess);
 		this.calculateMaxConsumption.accept(null /* ignored */);
 	}
 
@@ -264,6 +402,8 @@ public class Sum extends AbstractOpenemsComponent implements OpenemsComponent {
 		this.esss.remove(ess);
 		this.essSoc.removeComponent(ess);
 		this.essActivePower.removeComponent(ess);
+		this.essActiveChargeEnergy.removeComponent(ess);
+		this.essActiveDischargeEnergy.removeComponent(ess);
 	}
 
 	private final Consumer<Value<Integer>> calculateMaxConsumption = ignoreValue -> {
@@ -336,6 +476,7 @@ public class Sum extends AbstractOpenemsComponent implements OpenemsComponent {
 
 	@SuppressWarnings("unchecked")
 	public Sum() {
+
 		Utils.initializeChannels(this).forEach(channel -> this.addChannel(channel));
 		/*
 		 * Ess
@@ -343,6 +484,14 @@ public class Sum extends AbstractOpenemsComponent implements OpenemsComponent {
 		this.essSoc = new AverageInteger<SymmetricEss>(this, ChannelId.ESS_SOC, SymmetricEss.ChannelId.SOC);
 		this.essActivePower = new SumInteger<SymmetricEss>(this, ChannelId.ESS_ACTIVE_POWER,
 				SymmetricEss.ChannelId.ACTIVE_POWER);
+		this.essActiveChargeEnergy = new SumInteger<SymmetricEss>(this, ChannelId.ESS_ACTIVE_CHARGE_ENERGY,
+				SymmetricEss.ChannelId.ACTIVE_CHARGE_ENERGY);
+		this.essActiveDischargeEnergy = new SumInteger<SymmetricEss>(this, ChannelId.ESS_ACTIVE_DISCHARGE_ENERGY,
+				SymmetricEss.ChannelId.ACTIVE_DISCHARGE_ENERGY);
+		this.essActiveChargeEnergyDaily = new SumInteger<Sum>(this, ChannelId.ESS_ACTIVE_CHARGE_ENERGY_DAILY,
+				ChannelId.ESS_ACTIVE_CHARGE_ENERGY);
+		this.essActiveChargeEnergyDaily.addChannel(this.channel(ChannelId.ESS_ACTIVE_CHARGE_ENERGY));
+		this.essActiveChargeEnergyDaily.addChannelAsNegative(this.channel(ChannelId.ESS_ACTIVE_CHARGE_ENERGY_LAST_DAY));
 		/*
 		 * Grid
 		 */

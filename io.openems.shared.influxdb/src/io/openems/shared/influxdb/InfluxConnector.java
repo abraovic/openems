@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.influxdb.BatchOptions;
@@ -189,4 +190,28 @@ public class InfluxConnector {
 		return j;
 	}
 
+	public Optional<Object> getHistoricChannelValue(ChannelAddress channelAddress, ZonedDateTime at) {
+		// Prepare query string
+		StringBuilder query = new StringBuilder("SELECT ");
+		query.append("MEAN(\"" + channelAddress.toString() + "\") AS \"" + channelAddress.toString() + "\"");
+		query.append(" FROM data WHERE ");
+		query.append("time < ");
+		query.append(String.valueOf(at.toEpochSecond()));
+		query.append("s");
+		query.append("ORDER BY time DESC");
+		query.append("LIMIT 1");
+
+		try {
+			QueryResult queryResult = executeQuery(query.toString());
+			System.out.println(queryResult.toString());
+			System.out.println(queryResult.getResults().get(0).getSeries().get(0).toString());
+			System.out.println(queryResult.getResults().get(0).getSeries().get(0).getValues().toString());
+			System.out.println(queryResult.getResults().get(0).getSeries().get(0).getValues().get(0).toString());
+			// TODO: make sure this actually works (not tested)
+			return Optional.ofNullable(queryResult.getResults().get(0).getSeries().get(0).getValues().get(0).get(0));
+
+		} catch (IndexOutOfBoundsException | OpenemsException e) {
+			return Optional.empty();
+		}
+	}
 }
