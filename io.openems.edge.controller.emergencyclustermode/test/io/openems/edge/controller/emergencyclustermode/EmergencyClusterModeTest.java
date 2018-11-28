@@ -4,12 +4,13 @@ import org.junit.Test;
 
 import io.openems.common.types.ChannelAddress;
 import io.openems.edge.common.test.AbstractComponentConfig;
+import io.openems.edge.common.test.AbstractComponentTest.TestCase;
 import io.openems.edge.common.test.DummyConfigurationAdmin;
 import io.openems.edge.controller.test.ControllerTest;
 import io.openems.edge.ess.test.DummyManagedSymmetricEss;
 import io.openems.edge.meter.test.DummySymmetricMeter;
 import io.openems.edge.pvinverter.test.DummySymmetricPvInverter;
-import io.openems.edge.io.test.TestDigitalOutput;
+import io.openems.edge.io.test.DummyInputOutput;
 
 /*
  * Example JUNit test case
@@ -258,6 +259,7 @@ public class EmergencyClusterModeTest {
 	public void testOnGrid() throws Exception {
 		EmergencyClusterMode controller = this.setUp();
 		
+		
 		new ControllerTest(
 				controller,
 				controller.primaryEss,
@@ -293,14 +295,14 @@ public class EmergencyClusterModeTest {
 		controller.gridMeter = new DummySymmetricMeter("meter0");
 		controller.pvMeter = new DummySymmetricMeter("meter1");
 		controller.pvInverter = new DummySymmetricPvInverter("inverter0");
-		controller.backupEssSwitchInputComponent = new TestDigitalOutput("io0");
-		controller.backupEssSwitchOutputComponent = new TestDigitalOutput("io1");
-		controller.primaryEssSwitchInputComponent = new TestDigitalOutput("io2");
-		controller.primaryEssSwitchOutputComponent = new TestDigitalOutput("io3");
-		controller.pvOffGridSwitchInputComponent = new TestDigitalOutput("io4");
-		controller.pvOffGridSwitchOutputComponent = new TestDigitalOutput("io5");
-		controller.pvOnGridSwitchInputComponent = new TestDigitalOutput("io6");
-		controller.pvOnGridSwitchOutputComponent = new TestDigitalOutput("io7");
+		controller.backupEssSwitchInputComponent = new DummyInputOutput("io0");
+		controller.backupEssSwitchOutputComponent = new DummyInputOutput("io1");
+		controller.primaryEssSwitchInputComponent = new DummyInputOutput("io2");
+		controller.primaryEssSwitchOutputComponent = new DummyInputOutput("io3");
+		controller.pvOffGridSwitchInputComponent = new DummyInputOutput("io4");
+		controller.pvOffGridSwitchOutputComponent = new DummyInputOutput("io5");
+		controller.pvOnGridSwitchInputComponent = new DummyInputOutput("io6");
+		controller.pvOnGridSwitchOutputComponent = new DummyInputOutput("io7");
 		
 		// activate
 		ChannelAddress output0 = new ChannelAddress("io0", "DigitalInput0");
