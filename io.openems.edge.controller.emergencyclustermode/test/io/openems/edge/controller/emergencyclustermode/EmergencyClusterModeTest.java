@@ -295,24 +295,25 @@ public class EmergencyClusterModeTest {
 		controller.gridMeter = new DummySymmetricMeter("meter0");
 		controller.pvMeter = new DummySymmetricMeter("meter1");
 		controller.pvInverter = new DummySymmetricPvInverter("inverter0");
-		controller.backupEssSwitchInputComponent = new DummyInputOutput("io0");
-		controller.backupEssSwitchOutputComponent = new DummyInputOutput("io1");
-		controller.primaryEssSwitchInputComponent = new DummyInputOutput("io2");
-		controller.primaryEssSwitchOutputComponent = new DummyInputOutput("io3");
-		controller.pvOffGridSwitchInputComponent = new DummyInputOutput("io4");
-		controller.pvOffGridSwitchOutputComponent = new DummyInputOutput("io5");
-		controller.pvOnGridSwitchInputComponent = new DummyInputOutput("io6");
-		controller.pvOnGridSwitchOutputComponent = new DummyInputOutput("io7");
+		DummyInputOutput inputOutput = new DummyInputOutput("io0");
+		controller.backupEssSwitchInputComponent = inputOutput;
+		controller.backupEssSwitchOutputComponent = inputOutput;
+		controller.primaryEssSwitchInputComponent = inputOutput;
+		controller.primaryEssSwitchOutputComponent = inputOutput;
+		controller.pvOffGridSwitchInputComponent = inputOutput;
+		controller.pvOffGridSwitchOutputComponent = inputOutput;
+		controller.pvOnGridSwitchInputComponent = inputOutput;
+		controller.pvOnGridSwitchOutputComponent = inputOutput;
 		
 		// activate
-		ChannelAddress output0 = new ChannelAddress("io0", "DigitalInput0");
-		ChannelAddress output1 = new ChannelAddress("io1", "DigitalOutput0");
-		ChannelAddress output2 = new ChannelAddress("io2", "DigitalInput0");
-		ChannelAddress output3 = new ChannelAddress("io3", "DigitalOutput0");
-		ChannelAddress output4 = new ChannelAddress("io4", "DigitalInput0");
-		ChannelAddress output5 = new ChannelAddress("io5", "DigitalOutput0");
-		ChannelAddress output6 = new ChannelAddress("io6", "DigitalInput0");
-		ChannelAddress output7 = new ChannelAddress("io7", "DigitalOutput0");
+		ChannelAddress output0 = new ChannelAddress("io0", "InputOutput0");
+		ChannelAddress output1 = new ChannelAddress("io0", "InputOutput1");
+		ChannelAddress output2 = new ChannelAddress("io0", "InputOutput2");
+		ChannelAddress output3 = new ChannelAddress("io0", "InputOutput3");
+		ChannelAddress output4 = new ChannelAddress("io0", "InputOutput4");
+		ChannelAddress output5 = new ChannelAddress("io0", "InputOutput5");
+		ChannelAddress output6 = new ChannelAddress("io0", "InputOutput6");
+		ChannelAddress output7 = new ChannelAddress("io0", "InputOutput7");
 		
 		MyConfig config = new MyConfig(
 				"ctrlEmergencyClusterMode0",
