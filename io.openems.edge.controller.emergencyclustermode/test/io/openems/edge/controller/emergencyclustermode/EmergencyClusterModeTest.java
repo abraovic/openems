@@ -257,33 +257,6 @@ public class EmergencyClusterModeTest {
 	
 	@Test
 	public void testOnGrid() throws Exception {
-		EmergencyClusterMode controller = this.setUp();
-		
-		
-		new ControllerTest(
-				controller,
-				controller.primaryEss,
-				controller.backupEss,
-				controller.gridMeter,
-				controller.pvMeter,
-				controller.pvInverter,
-				controller.backupEssSwitchInputComponent,
-				controller.backupEssSwitchOutputComponent,
-				controller.primaryEssSwitchInputComponent,
-				controller.primaryEssSwitchOutputComponent,
-				controller.pvOffGridSwitchInputComponent,
-				controller.pvOffGridSwitchOutputComponent,
-				controller.pvOnGridSwitchInputComponent,
-				controller.pvOnGridSwitchOutputComponent)
-		.run();
-	}
-	
-	@Test 
-	public void testOffGrid() throws Exception {
-		
-	}
-	
-	private EmergencyClusterMode setUp() throws Exception {
 		
 		// init controller
 		EmergencyClusterMode controller = new EmergencyClusterMode();
@@ -306,14 +279,14 @@ public class EmergencyClusterModeTest {
 		controller.pvOnGridSwitchOutputComponent = inputOutput;
 		
 		// activate
-		ChannelAddress output0 = new ChannelAddress("io0", "InputOutput0");
-		ChannelAddress output1 = new ChannelAddress("io0", "InputOutput1");
-		ChannelAddress output2 = new ChannelAddress("io0", "InputOutput2");
-		ChannelAddress output3 = new ChannelAddress("io0", "InputOutput3");
-		ChannelAddress output4 = new ChannelAddress("io0", "InputOutput4");
-		ChannelAddress output5 = new ChannelAddress("io0", "InputOutput5");
-		ChannelAddress output6 = new ChannelAddress("io0", "InputOutput6");
-		ChannelAddress output7 = new ChannelAddress("io0", "InputOutput7");
+		ChannelAddress backupEssSwitchInput = new ChannelAddress("io0", "InputOutput0");
+		ChannelAddress backupEssSwitchOutput = new ChannelAddress("io0", "InputOutput1");
+		ChannelAddress primaryEssSwitchInput = new ChannelAddress("io0", "InputOutput2");
+		ChannelAddress primaryEssSwitwhOutput = new ChannelAddress("io0", "InputOutput3");
+		ChannelAddress pvOffGridSwitchInput = new ChannelAddress("io0", "InputOutput4");
+		ChannelAddress pvOffGridSwitchOutput = new ChannelAddress("io0", "InputOutput5");
+		ChannelAddress pvOnGridSwitchInput = new ChannelAddress("io0", "InputOutput6");
+		ChannelAddress pvOnGridSwitchOutput = new ChannelAddress("io0", "InputOutput7");
 		
 		MyConfig config = new MyConfig(
 				"ctrlEmergencyClusterMode0",
@@ -321,27 +294,88 @@ public class EmergencyClusterModeTest {
 				true,
 				true,
 				true,
-				40000,
-				40000,
+				70000,
+				80000,
 				"inverter0",
 				"ess0",
 				"ess1",
 				"meter0",
 				"meter1",
-				output0.toString(),
-				output1.toString(),
-				output2.toString(),
-				output3.toString(),
-				output4.toString(),
-				output5.toString(),
-				output6.toString(),
-				output7.toString()
+				backupEssSwitchInput.toString(),
+				backupEssSwitchOutput.toString(),
+				primaryEssSwitchInput.toString(),
+				primaryEssSwitwhOutput.toString(),
+				pvOffGridSwitchInput.toString(),
+				pvOffGridSwitchOutput.toString(),
+				pvOnGridSwitchInput.toString(),
+				pvOnGridSwitchOutput.toString()
 		);
 		
 		controller.activate(null, config);
 		// twice, so that reference target is set
 		controller.activate(null, config);
 		
-		return controller;
+		// ess0 - primary
+		ChannelAddress ess0GridMode = new ChannelAddress("ess0", "GridMode");
+		ChannelAddress ess0ActivePower = new ChannelAddress("ess0", "ActivePower");
+		ChannelAddress ess0Soc = new ChannelAddress("ess0", "Soc");
+		ChannelAddress ess0AllowedCharge = new ChannelAddress("ess0", "AllowedChargePower");
+		ChannelAddress ess0AllowedDischarge = new ChannelAddress("ess0", "AllowedDischargePower");
+		
+		// ess1 - backup
+		ChannelAddress ess1GridMode = new ChannelAddress("ess1", "GridMode");
+		ChannelAddress ess1ActivePower = new ChannelAddress("ess1", "ActivePower");
+		ChannelAddress ess1Soc = new ChannelAddress("ess1", "Soc");
+		ChannelAddress ess1AllowedCharge = new ChannelAddress("ess1", "AllowedChargePower");
+		ChannelAddress ess1AllowedDischarge = new ChannelAddress("ess1", "AllowedDischargePower");
+		
+		// pv inverter
+		ChannelAddress inverter0ActivePower = new ChannelAddress("inverter0", "ActivePower");
+		
+		// meters
+		ChannelAddress meter0ActivePower = new ChannelAddress("meter0", "ActivePower");
+		ChannelAddress meter1ActivePower = new ChannelAddress("meter1", "ActivePower");
+		
+		new ControllerTest(
+				controller,
+				controller.primaryEss,
+				controller.backupEss,
+				controller.gridMeter,
+				controller.pvMeter,
+				controller.pvInverter,
+				controller.backupEssSwitchInputComponent,
+				controller.backupEssSwitchOutputComponent,
+				controller.primaryEssSwitchInputComponent,
+				controller.primaryEssSwitchOutputComponent,
+				controller.pvOffGridSwitchInputComponent,
+				controller.pvOffGridSwitchOutputComponent,
+				controller.pvOnGridSwitchInputComponent,
+				controller.pvOnGridSwitchOutputComponent)
+		.next(new TestCase() //
+				.input(ess0GridMode, 1)
+				.input(ess0ActivePower, 80000) //
+				.input(ess0Soc, 70) //
+				.input(ess0AllowedCharge, 40000) //
+				.input(ess0AllowedDischarge, -40000) //
+				.input(ess1GridMode, 1)
+				.input(ess1ActivePower, 80000) //
+				.input(ess1Soc, 70) //
+				.input(ess1AllowedCharge, 40000) //
+				.input(ess1AllowedDischarge, -40000) //
+				.input(inverter0ActivePower, 80000) //
+				.input(meter0ActivePower, 200000) //
+				.input(meter1ActivePower, 120000) //
+				.input(backupEssSwitchInput, false)
+				.input(primaryEssSwitchInput, false)
+				.input(pvOffGridSwitchInput, false)
+				.input(pvOnGridSwitchInput, true)
+				.output(backupEssSwitchOutput, false)) //
+		.run();
 	}
+	
+	@Test 
+	public void testOffGrid() throws Exception {
+		
+	}
+	
 }
