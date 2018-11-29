@@ -38,14 +38,10 @@ public class EmergencyClusterModeTest {
 		private final String pvMeterId;
 		
 		// switches
-		private final String Q1_inputChannelAddress;
-		private final String Q1_outputChannelAddress;
-		private final String Q2_inputChannelAddress;
-		private final String Q2_outputChannelAddress;
-		private final String Q3_inputChannelAddress;
-		private final String Q3_outputChannelAddress;
-		private final String Q4_inputChannelAddress;
-		private final String Q4_outputChannelAddress;
+		private final String Q1_channelAddress;
+		private final String Q2_channelAddress;
+		private final String Q3_channelAddress;
+		private final String Q4_channelAddress;
 
 		public MyConfig(
 				String id,
@@ -60,14 +56,10 @@ public class EmergencyClusterModeTest {
 				String backupEssId,
 				String gridMeterId,
 				String pvMeterId,
-				String Q1_inputChannelAddress,
-				String Q1_outputChannelAddress,
-				String Q2_inputChannelAddress,
-				String Q2_outputChannelAddress,
-				String Q3_inputChannelAddress,
-				String Q3_outputChannelAddress,
-				String Q4_inputChannelAddress,
-				String Q4_outputChannelAddress) {
+				String Q1_channelAddress,
+				String Q2_channelAddress,
+				String Q3_channelAddress,
+				String Q4_channelAddress) {
 			super(Config.class, id);
 			
 			this.allowChargeFromAC = allowChargeFromAC;
@@ -83,14 +75,10 @@ public class EmergencyClusterModeTest {
 			this.gridMeterId = gridMeterId;
 			this.pvMeterId = pvMeterId;
 			
-			this.Q1_inputChannelAddress = Q1_inputChannelAddress;
-			this.Q1_outputChannelAddress = Q1_outputChannelAddress;
-			this.Q2_inputChannelAddress = Q2_inputChannelAddress;
-			this.Q2_outputChannelAddress = Q2_outputChannelAddress;
-			this.Q3_inputChannelAddress = Q3_inputChannelAddress;
-			this.Q3_outputChannelAddress = Q3_outputChannelAddress;
-			this.Q4_inputChannelAddress = Q4_inputChannelAddress;
-			this.Q4_outputChannelAddress = Q4_outputChannelAddress;
+			this.Q1_channelAddress = Q1_channelAddress;
+			this.Q2_channelAddress = Q2_channelAddress;
+			this.Q3_channelAddress = Q3_channelAddress;
+			this.Q4_channelAddress = Q4_channelAddress;
 		}
 
 		@Override
@@ -134,82 +122,42 @@ public class EmergencyClusterModeTest {
 		}
 
 		@Override
-		public String Q1_inputChannelAddress() {
-			return this.Q1_inputChannelAddress;
+		public String Q1_channelAddress() {
+			return this.Q1_channelAddress;
 		}
 
 		@Override
-		public String Q1_inputComponent_target() {
+		public String Q1_component_target() {
+			return "";
+		}
+		
+		@Override
+		public String Q2_channelAddress() {
+			return this.Q2_channelAddress;
+		}
+
+		@Override
+		public String Q2_component_target() {
 			return "";
 		}
 
 		@Override
-		public String Q1_outputChannelAddress() {
-			return this.Q1_outputChannelAddress;
+		public String Q3_channelAddress() {
+			return this.Q3_channelAddress;
 		}
 
 		@Override
-		public String Q1_outputComponent_target() {
+		public String Q3_component_target() {
 			return "";
 		}
 
 		@Override
-		public String Q2_inputChannelAddress() {
-			return this.Q2_inputChannelAddress;
+		public String Q4_channelAddress() {
+			return this.Q4_channelAddress;
 		}
 
 		@Override
-		public String Q2_inputComponent_target() {
-			return "";
-		}
-
-		@Override
-		public String Q2_outputChannelAddress() {
-			return this.Q2_outputChannelAddress;
-		}
-
-		@Override
-		public String Q2_outputComponent_target() {
-			return "";
-		}
-
-		@Override
-		public String Q3_inputChannelAddress() {
-			return this.Q3_inputChannelAddress;
-		}
-
-		@Override
-		public String Q3_inputComponent_target() {
-			return "";
-		}
-
-		@Override
-		public String Q3_outputChannelAddress() {
-			return this.Q3_outputChannelAddress;
-		}
-
-		@Override
-		public String Q3_outputComponent_target() {
-			return "";
-		}
-
-		@Override
-		public String Q4_inputChannelAddress() {
-			return this.Q4_inputChannelAddress;
-		}
-
-		@Override
-		public String Q4_inputComponent_target() {
-			return "";
-		}
-
-		@Override
-		public String Q4_outputChannelAddress() {
-			return this.Q4_outputChannelAddress;
-		}
-
-		@Override
-		public String Q4_outputComponent_target() {
+		public String Q4_component_target() {
 			return "";
 		}
 
@@ -269,24 +217,16 @@ public class EmergencyClusterModeTest {
 		controller.pvMeter = new DummySymmetricMeter("meter1");
 		controller.pvInverter = new DummySymmetricPvInverter("inverter0");
 		DummyInputOutput inputOutput = new DummyInputOutput("io0");
-		controller.backupEssSwitchInputComponent = inputOutput;
-		controller.backupEssSwitchOutputComponent = inputOutput;
-		controller.primaryEssSwitchInputComponent = inputOutput;
-		controller.primaryEssSwitchOutputComponent = inputOutput;
-		controller.pvOffGridSwitchInputComponent = inputOutput;
-		controller.pvOffGridSwitchOutputComponent = inputOutput;
-		controller.pvOnGridSwitchInputComponent = inputOutput;
-		controller.pvOnGridSwitchOutputComponent = inputOutput;
+		controller.backupEssSwitchComponent = inputOutput;
+		controller.primaryEssSwitchComponent = inputOutput;
+		controller.pvOffGridSwitchComponent = inputOutput;
+		controller.pvOnGridSwitchComponent = inputOutput;
 		
 		// activate
-		ChannelAddress backupEssSwitchInput = new ChannelAddress("io0", "InputOutput0");
-		ChannelAddress backupEssSwitchOutput = new ChannelAddress("io0", "InputOutput1");
-		ChannelAddress primaryEssSwitchInput = new ChannelAddress("io0", "InputOutput2");
-		ChannelAddress primaryEssSwitwhOutput = new ChannelAddress("io0", "InputOutput3");
-		ChannelAddress pvOffGridSwitchInput = new ChannelAddress("io0", "InputOutput4");
-		ChannelAddress pvOffGridSwitchOutput = new ChannelAddress("io0", "InputOutput5");
-		ChannelAddress pvOnGridSwitchInput = new ChannelAddress("io0", "InputOutput6");
-		ChannelAddress pvOnGridSwitchOutput = new ChannelAddress("io0", "InputOutput7");
+		ChannelAddress backupEssSwitchChannel = new ChannelAddress("io0", "InputOutput0");
+		ChannelAddress primaryEssSwitchChannel = new ChannelAddress("io0", "InputOutput1");
+		ChannelAddress pvOffGridSwitchChannel = new ChannelAddress("io0", "InputOutput2");
+		ChannelAddress pvOnGridSwitchChannel = new ChannelAddress("io0", "InputOutput3");
 		
 		MyConfig config = new MyConfig(
 				"ctrlEmergencyClusterMode0",
@@ -301,14 +241,10 @@ public class EmergencyClusterModeTest {
 				"ess1",
 				"meter0",
 				"meter1",
-				backupEssSwitchInput.toString(),
-				backupEssSwitchOutput.toString(),
-				primaryEssSwitchInput.toString(),
-				primaryEssSwitwhOutput.toString(),
-				pvOffGridSwitchInput.toString(),
-				pvOffGridSwitchOutput.toString(),
-				pvOnGridSwitchInput.toString(),
-				pvOnGridSwitchOutput.toString()
+				backupEssSwitchChannel.toString(),
+				primaryEssSwitchChannel.toString(),
+				pvOffGridSwitchChannel.toString(),
+				pvOnGridSwitchChannel.toString()
 		);
 		
 		controller.activate(null, config);
@@ -343,14 +279,10 @@ public class EmergencyClusterModeTest {
 				controller.gridMeter,
 				controller.pvMeter,
 				controller.pvInverter,
-				controller.backupEssSwitchInputComponent,
-				controller.backupEssSwitchOutputComponent,
-				controller.primaryEssSwitchInputComponent,
-				controller.primaryEssSwitchOutputComponent,
-				controller.pvOffGridSwitchInputComponent,
-				controller.pvOffGridSwitchOutputComponent,
-				controller.pvOnGridSwitchInputComponent,
-				controller.pvOnGridSwitchOutputComponent)
+				controller.backupEssSwitchComponent,
+				controller.primaryEssSwitchComponent,
+				controller.pvOffGridSwitchComponent,
+				controller.pvOnGridSwitchComponent)
 		.next(new TestCase() //
 				.input(ess0GridMode, 1)
 				.input(ess0ActivePower, 80000) //
@@ -365,11 +297,11 @@ public class EmergencyClusterModeTest {
 				.input(inverter0ActivePower, 80000) //
 				.input(meter0ActivePower, 200000) //
 				.input(meter1ActivePower, 120000) //
-				.input(backupEssSwitchInput, false)
-				.input(primaryEssSwitchInput, false)
-				.input(pvOffGridSwitchInput, false)
-				.input(pvOnGridSwitchInput, true)
-				.output(backupEssSwitchOutput, false)) //
+				.input(backupEssSwitchChannel, false)
+				.input(primaryEssSwitchChannel, false)
+				.input(pvOffGridSwitchChannel, false)
+				.input(pvOnGridSwitchChannel, true)
+				.output(backupEssSwitchChannel, false)) //
 		.run();
 	}
 	

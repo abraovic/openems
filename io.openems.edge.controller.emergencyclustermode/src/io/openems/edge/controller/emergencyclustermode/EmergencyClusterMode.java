@@ -20,7 +20,6 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import io.openems.common.exceptions.InvalidValueException;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.ChannelAddress;
-import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -47,6 +46,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 	private long lastPvOffGridDisconnected = 0L;
 	private long waitOn = 0L;
 	private long waitOff = 0L;
+	private boolean firstRun = false;
 	
 	private boolean allowChargeFromAC;
 	private boolean gridFeedLimitation;
@@ -69,32 +69,20 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 	protected SymmetricPvInverter pvInverter;
 	
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent backupEssSwitchOutputComponent = null;
-	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent backupEssSwitchInputComponent = null;
-	private WriteChannel<Boolean> backupEssSwitchWrite = null;
-	private Channel<Boolean> backupEssSwitchRead = null;
+	protected OpenemsComponent backupEssSwitchComponent = null;
+	private WriteChannel<Boolean> backupEssSwitchChannel = null;
 	
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent primaryEssSwitchOutputComponent = null;
-	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent primaryEssSwitchInputComponent = null;
-	private WriteChannel<Boolean> primaryEssSwitchWrite = null;
-	private Channel<Boolean> primaryEssSwitchRead = null;
+	protected OpenemsComponent primaryEssSwitchComponent = null;
+	private WriteChannel<Boolean> primaryEssSwitchChannel = null;
 	
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent pvOffGridSwitchOutputComponent = null;
-	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent pvOffGridSwitchInputComponent = null;
-	private WriteChannel<Boolean> pvOffGridSwitchWrite = null;
-	private Channel<Boolean> pvOffGridSwitchRead = null;
+	protected OpenemsComponent pvOffGridSwitchComponent = null;
+	private WriteChannel<Boolean> pvOffGridSwitchChannel = null;
 	
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent pvOnGridSwitchOutputComponent = null;
-	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
-	protected OpenemsComponent pvOnGridSwitchInputComponent = null;
-	private WriteChannel<Boolean> pvOnGridSwitchWrite = null;
-	private Channel<Boolean> pvOnGridSwitchRead = null;
+	protected OpenemsComponent pvOnGridSwitchComponent = null;
+	private WriteChannel<Boolean> pvOnGridSwitchChannel = null;
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
 	protected ManagedSymmetricEss primaryEss;
@@ -131,52 +119,37 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 			
 			// wago
 			//Q1
-			ChannelAddress outputChannelAddress = ChannelAddress.fromString(config.Q1_outputChannelAddress());
-			ChannelAddress inputChannelAddress = ChannelAddress.fromString(config.Q1_inputChannelAddress());
+			ChannelAddress channelAddress = ChannelAddress.fromString(config.Q1_channelAddress());
 			
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "backupEssSwitchOutputComponent", 
-					outputChannelAddress.getComponentId()));
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "backupEssSwitchInputComponent", 
-					inputChannelAddress.getComponentId()));
+			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "backupEssSwitchComponent", 
+					channelAddress.getComponentId()));
 			
-			this.backupEssSwitchWrite = this.backupEssSwitchOutputComponent.channel(outputChannelAddress.getChannelId());
-			this.backupEssSwitchRead = this.backupEssSwitchInputComponent.channel(inputChannelAddress.getChannelId());
+			this.backupEssSwitchChannel = this.backupEssSwitchComponent.channel(channelAddress.getChannelId());
 			
 			//Q2
-			outputChannelAddress = ChannelAddress.fromString(config.Q2_outputChannelAddress());
-			inputChannelAddress = ChannelAddress.fromString(config.Q2_inputChannelAddress());
+			channelAddress = ChannelAddress.fromString(config.Q2_channelAddress());
 			
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "primaryEssSwitchOutputComponent", 
-					outputChannelAddress.getComponentId()));
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "primaryEssSwitchInputComponent", 
-					inputChannelAddress.getComponentId()));
+			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "primaryEssSwitchComponent", 
+					channelAddress.getComponentId()));
 			
-			this.primaryEssSwitchWrite = this.backupEssSwitchOutputComponent.channel(outputChannelAddress.getChannelId());
-			this.primaryEssSwitchRead = this.backupEssSwitchInputComponent.channel(inputChannelAddress.getChannelId());
+			this.primaryEssSwitchChannel = this.primaryEssSwitchComponent.channel(channelAddress.getChannelId());
 			
 			//Q3
-			outputChannelAddress = ChannelAddress.fromString(config.Q3_outputChannelAddress());
-			inputChannelAddress = ChannelAddress.fromString(config.Q3_inputChannelAddress());
+			channelAddress = ChannelAddress.fromString(config.Q3_channelAddress());
 			
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "pvOffGridSwitchOutputComponent", 
-					outputChannelAddress.getComponentId()));
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "pvOffGridSwitchInputComponent", 
-					inputChannelAddress.getComponentId()));
+			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "pvOffGridSwitchComponent", 
+					channelAddress.getComponentId()));
 			
-			this.pvOffGridSwitchWrite = this.backupEssSwitchOutputComponent.channel(outputChannelAddress.getChannelId());
-			this.pvOffGridSwitchRead = this.backupEssSwitchInputComponent.channel(inputChannelAddress.getChannelId());
+			this.pvOffGridSwitchChannel = this.pvOffGridSwitchComponent.channel(channelAddress.getChannelId());
 			
 			//Q4
-			outputChannelAddress = ChannelAddress.fromString(config.Q4_outputChannelAddress());
-			inputChannelAddress = ChannelAddress.fromString(config.Q4_inputChannelAddress());
+			channelAddress = ChannelAddress.fromString(config.Q4_channelAddress());
 			
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "pvOnGridSwitchOutputComponent", 
-					outputChannelAddress.getComponentId()));
-			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "pvOnGridSwitchInputComponent", 
-					inputChannelAddress.getComponentId()));
+			references.add(OpenemsComponent.updateReferenceFilter(this.cm, config.service_pid(), "pvOnGridSwitchComponent", 
+					channelAddress.getComponentId()));
+
 			
-			this.pvOnGridSwitchWrite = this.backupEssSwitchOutputComponent.channel(outputChannelAddress.getChannelId());
-			this.pvOnGridSwitchRead = this.backupEssSwitchInputComponent.channel(inputChannelAddress.getChannelId());
+			this.pvOnGridSwitchChannel = this.pvOnGridSwitchComponent.channel(channelAddress.getChannelId());
 			
 			if (!references.contains(false)) {
 				// all update references passes
@@ -198,27 +171,6 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		this.cluster.add(this.primaryEss);
 		this.cluster.add(this.backupEss);
 		
-		// check current grid state
-		if (this.cluster.isOnGrid()) {
-			try {
-				if (this.isSwitchedToOnGrid()) {
-					this.pvOnGridSwitch = true;
-					this.pvOffGridSwitch = false;
-					this.primaryEssSwitch = true;
-					this.backupEssSwitch = false;
-					this.pvLimit = this.pvInverter.getActivePower().value().get();
-					this.isSwitchedToOffGrid = false;
-				} else {
-					this.isSwitchedToOffGrid = true;
-				}
-			} catch (InvalidValueException e) {
-				log.error(e.getMessage());
-			}
-			
-		} else {
-			this.isSwitchedToOffGrid = false;
-		}
-		
 		this.log.debug("EmergencyClusterMode bundle activated");
 	}
 
@@ -229,6 +181,11 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 
 	@Override
 	public void run() {
+		
+		if (!this.firstRun) {
+			this.checkOnFristRun();
+		}
+		
 		if (this.remoteStart) {
 			try {
 				if (this.cluster.isOnGrid()) {
@@ -238,10 +195,10 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 				}
 				
 				this.pvInverter.getActivePowerLimit().setNextWriteValue(this.pvLimit);
-				this.pvOnGridSwitchWrite.setNextWriteValue(this.pvOnGridSwitch);
-				this.pvOffGridSwitchWrite.setNextWriteValue(this.pvOffGridSwitch);
-				this.primaryEssSwitchWrite.setNextWriteValue(this.primaryEssSwitch);
-				this.backupEssSwitchWrite.setNextWriteValue(this.backupEssSwitch);
+				this.pvOnGridSwitchChannel.setNextWriteValue(this.pvOnGridSwitch);
+				this.pvOffGridSwitchChannel.setNextWriteValue(this.pvOffGridSwitch);
+				this.primaryEssSwitchChannel.setNextWriteValue(this.primaryEssSwitch);
+				this.backupEssSwitchChannel.setNextWriteValue(this.backupEssSwitch);
 			} catch (OpenemsException e) {
 				this.log.error("Error on reading remote Stop Element", e);
 			}
@@ -258,7 +215,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 			// system detects that grid is on, but it is currently switched off grid
 		    // it means that all ESS and PV needs to be switched to onGrid
 			try {
-				if (this.allEssDisconnected() && !this.pvOffGridSwitchRead.value().getOrError() && !this.pvOnGridSwitchRead.value().getOrError()) {
+				if (this.allEssDisconnected() && !this.pvOffGridSwitchChannel.value().getOrError() && !this.pvOnGridSwitchChannel.value().getOrError()) {
 					if (this.waitOn + this.switchDealy <= System.currentTimeMillis()) {
 						this.primaryEssSwitch = false;
 						this.pvLimit = this.pvInverter.getActivePower().value().getOrError();
@@ -397,7 +354,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		    // NOT switched to off gird mode (UPS is running)
 		    // it means that all ESS and PV needs to be switched to offGrid
 			try {
-				if (this.allEssDisconnected() && !this.pvOffGridSwitchRead.value().get() && !this.pvOnGridSwitchRead.value().get()) {
+				if (this.allEssDisconnected() && !this.pvOffGridSwitchChannel.value().get() && !this.pvOnGridSwitchChannel.value().get()) {
 					if (this.waitOff <= System.currentTimeMillis()) {
 						this.primaryEssSwitch = false;
 						this.activeEss = this.primaryEss;
@@ -419,6 +376,31 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		}
 	}
 
+	private void checkOnFristRun() {
+		// check current grid state
+		if (this.cluster.isOnGrid()) {
+			try {
+				if (this.isSwitchedToOnGrid()) {
+					this.pvOnGridSwitch = true;
+					this.pvOffGridSwitch = false;
+					this.primaryEssSwitch = true;
+					this.backupEssSwitch = false;
+					this.pvLimit = this.pvInverter.getActivePower().value().get();
+					this.isSwitchedToOffGrid = false;
+				} else {
+					this.isSwitchedToOffGrid = true;
+				}
+			} catch (InvalidValueException e) {
+				log.error(e.getMessage());
+			}
+			
+		} else {
+			this.isSwitchedToOffGrid = false;
+		}
+		
+		this.firstRun = true;
+	}
+	
 	/**
 	 * Checks if both ESS devices are disconnected from grid
 	 * -> primaryEssSwitch is NC so it must be true to be opened <-
@@ -426,10 +408,10 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 	 * @return boolean
 	 * */
 	private boolean allEssDisconnected() throws InvalidValueException {
-		if (this.primaryEssSwitchRead.value().getOrError()) {
+		if (this.primaryEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
-		if (!this.backupEssSwitchRead.value().getOrError()) {
+		if (!this.backupEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
 		return true;
@@ -443,16 +425,16 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 	 * @return boolean
 	 * */
 	private boolean isSwitchedToOnGrid() throws InvalidValueException {
-		if (this.primaryEssSwitchRead.value().getOrError()) {
+		if (this.primaryEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
-		if (!this.backupEssSwitchRead.value().getOrError()) {
+		if (!this.backupEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
-		if (this.pvOffGridSwitchRead.value().getOrError()) {
+		if (this.pvOffGridSwitchChannel.value().getOrError()) {
 			return false;
 		}
-		if (!this.pvOnGridSwitchRead.value().getOrError()) {
+		if (!this.pvOnGridSwitchChannel.value().getOrError()) {
 			return false;
 		}
 		
