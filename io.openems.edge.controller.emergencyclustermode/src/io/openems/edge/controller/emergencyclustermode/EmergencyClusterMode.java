@@ -383,7 +383,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 				if (this.isSwitchedToOnGrid()) {
 					this.pvOnGridSwitch = true;
 					this.pvOffGridSwitch = false;
-					this.primaryEssSwitch = true;
+					this.primaryEssSwitch = false;
 					this.backupEssSwitch = false;
 					this.pvLimit = this.pvInverter.getActivePower().value().get();
 					this.isSwitchedToOffGrid = false;
@@ -428,7 +428,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		if (this.primaryEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
-		if (!this.backupEssSwitchChannel.value().getOrError()) {
+		if (this.backupEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
 		if (this.pvOffGridSwitchChannel.value().getOrError()) {

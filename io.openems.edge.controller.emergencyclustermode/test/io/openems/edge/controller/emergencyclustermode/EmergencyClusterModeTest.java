@@ -1,11 +1,16 @@
 package io.openems.edge.controller.emergencyclustermode;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+
 import org.junit.Test;
 
 import io.openems.common.types.ChannelAddress;
 import io.openems.edge.common.test.AbstractComponentConfig;
 import io.openems.edge.common.test.AbstractComponentTest.TestCase;
 import io.openems.edge.common.test.DummyConfigurationAdmin;
+import io.openems.edge.common.test.TimeLeapClock;
 import io.openems.edge.controller.test.ControllerTest;
 import io.openems.edge.ess.test.DummyManagedSymmetricEss;
 import io.openems.edge.meter.test.DummySymmetricMeter;
@@ -208,6 +213,8 @@ public class EmergencyClusterModeTest {
 		
 		// init controller
 		EmergencyClusterMode controller = new EmergencyClusterMode();
+		final TimeLeapClock clock14 = new TimeLeapClock(Instant.ofEpochSecond(1543500000), ZoneId.systemDefault());
+		final TimeLeapClock clock10 = new TimeLeapClock(Instant.ofEpochSecond(1543485600), ZoneId.systemDefault());
 		
 		// add references
 		controller.cm = new DummyConfigurationAdmin();
@@ -215,7 +222,7 @@ public class EmergencyClusterModeTest {
 		controller.backupEss = new DummyManagedSymmetricEss("ess1");
 		controller.gridMeter = new DummySymmetricMeter("meter0");
 		controller.pvMeter = new DummySymmetricMeter("meter1");
-		controller.pvInverter = new DummySymmetricPvInverter("inverter0");
+		controller.pvInverter = new DummySymmetricPvInverter("pvInverter0");
 		DummyInputOutput inputOutput = new DummyInputOutput("io0");
 		controller.backupEssSwitchComponent = inputOutput;
 		controller.primaryEssSwitchComponent = inputOutput;
@@ -233,8 +240,8 @@ public class EmergencyClusterModeTest {
 				true,
 				true,
 				true,
-				true,
-				70000,
+				false,
+				10000,
 				80000,
 				"inverter0",
 				"ess0",
@@ -266,7 +273,7 @@ public class EmergencyClusterModeTest {
 		ChannelAddress ess1AllowedDischarge = new ChannelAddress("ess1", "AllowedDischargePower");
 		
 		// pv inverter
-		ChannelAddress inverter0ActivePower = new ChannelAddress("inverter0", "ActivePower");
+		ChannelAddress pvInverter0ActivePower = new ChannelAddress("pvInverter0", "ActivePower");
 		
 		// meters
 		ChannelAddress meter0ActivePower = new ChannelAddress("meter0", "ActivePower");
@@ -283,25 +290,55 @@ public class EmergencyClusterModeTest {
 				controller.primaryEssSwitchComponent,
 				controller.pvOffGridSwitchComponent,
 				controller.pvOnGridSwitchComponent)
+		
 		.next(new TestCase() //
+				.timeleap(clock14, 0, ChronoUnit.MINUTES)
 				.input(ess0GridMode, 1)
-				.input(ess0ActivePower, 80000) //
-				.input(ess0Soc, 70) //
-				.input(ess0AllowedCharge, 40000) //
-				.input(ess0AllowedDischarge, -40000) //
+				.input(ess0ActivePower, -40000) //
+				.input(ess0Soc, 80) //
+				.input(ess0AllowedCharge, -40000) //
+				.input(ess0AllowedDischarge, 40000) //
 				.input(ess1GridMode, 1)
-				.input(ess1ActivePower, 80000) //
-				.input(ess1Soc, 70) //
-				.input(ess1AllowedCharge, 40000) //
-				.input(ess1AllowedDischarge, -40000) //
-				.input(inverter0ActivePower, 80000) //
-				.input(meter0ActivePower, 200000) //
-				.input(meter1ActivePower, 120000) //
+				.input(ess1ActivePower, -40000) //
+				.input(ess1Soc, 80) //
+				.input(ess1AllowedCharge, -40000) //
+				.input(ess1AllowedDischarge, 40000) //
+				.input(pvInverter0ActivePower, 50000) //
+				.input(meter0ActivePower, 7000) //
+				.input(meter1ActivePower, 50000) //
 				.input(backupEssSwitchChannel, false)
 				.input(primaryEssSwitchChannel, false)
 				.input(pvOffGridSwitchChannel, false)
 				.input(pvOnGridSwitchChannel, true)
-				.output(backupEssSwitchChannel, false)) //
+				.output(backupEssSwitchChannel, false)
+				.output(primaryEssSwitchChannel, false)
+				.output(pvOffGridSwitchChannel, false)
+				.output(pvOnGridSwitchChannel, true)
+			)
+		.next(new TestCase() //
+				.timeleap(clock10, 0, ChronoUnit.MINUTES)
+				.input(ess0GridMode, 1)
+				.input(ess0ActivePower, -40000) //
+				.input(ess0Soc, 80) //
+				.input(ess0AllowedCharge, -40000) //
+				.input(ess0AllowedDischarge, 40000) //
+				.input(ess1GridMode, 1)
+				.input(ess1ActivePower, -40000) //
+				.input(ess1Soc, 80) //
+				.input(ess1AllowedCharge, -40000) //
+				.input(ess1AllowedDischarge, 40000) //
+				.input(pvInverter0ActivePower, 50000) //
+				.input(meter0ActivePower, 7000) //
+				.input(meter1ActivePower, 50000) //
+				.input(backupEssSwitchChannel, false)
+				.input(primaryEssSwitchChannel, false)
+				.input(pvOffGridSwitchChannel, false)
+				.input(pvOnGridSwitchChannel, true)
+				.output(backupEssSwitchChannel, false)
+				.output(primaryEssSwitchChannel, false)
+				.output(pvOffGridSwitchChannel, false)
+				.output(pvOnGridSwitchChannel, true)
+			)
 		.run();
 	}
 	
