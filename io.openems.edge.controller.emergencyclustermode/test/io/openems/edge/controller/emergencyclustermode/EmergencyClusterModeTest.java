@@ -1,5 +1,7 @@
 package io.openems.edge.controller.emergencyclustermode;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import org.junit.Test;
@@ -224,6 +226,7 @@ public class EmergencyClusterModeTest {
 	private ChannelAddress ess1AllowedDischarge = new ChannelAddress("ess1", "AllowedDischargePower");	
 	// pv inverter
 	private ChannelAddress pvInverter0ActivePower = new ChannelAddress("pvInverter0", "ActivePower");	
+	private ChannelAddress pvInverter0ActivePowerLimit = new ChannelAddress("pvInverter0", "ActivePowerLimit");
 	// meters
 	private ChannelAddress meter0ActivePower = new ChannelAddress("meter0", "ActivePower");
 	private ChannelAddress meter1ActivePower = new ChannelAddress("meter1", "ActivePower");
@@ -235,13 +238,13 @@ public class EmergencyClusterModeTest {
 	@Test
 	public void testOnGridIsSwitchedToOnGrid() throws Exception {
 		// init controller
-		final TimeLeapClock clock = new TimeLeapClock();
+		final TimeLeapClock clock = new TimeLeapClock(Instant.ofEpochSecond(1922277600), ZoneId.systemDefault());
 		ControllerTest ctrTest = this.setupTest(clock, true, true, true, false, 10000, 80000);
 		
 		ctrTest.next(new TestCase() //
 				.input(ess0GridMode, 1)
 				.input(ess0ActivePower, -40000) //
-				.input(ess0Soc, 70) //
+				.input(ess0Soc, 80) //
 				.input(ess0AllowedCharge, -40000) //
 				.input(ess0AllowedDischarge, 40000) //
 				.input(ess1GridMode, 1)
@@ -260,6 +263,7 @@ public class EmergencyClusterModeTest {
 				.output(primaryEssSwitchChannel, false)
 				.output(pvOffGridSwitchChannel, false)
 				.output(pvOnGridSwitchChannel, true)
+				.output(pvInverter0ActivePowerLimit, 67000)
 			)
 		.run();
 	}
@@ -378,6 +382,7 @@ public class EmergencyClusterModeTest {
 				.output(primaryEssSwitchChannel, true)
 				.output(pvOffGridSwitchChannel, false)
 				.output(pvOnGridSwitchChannel, false)
+				.output(pvInverter0ActivePowerLimit, 35000)
 			)
 		.run();
 	}
