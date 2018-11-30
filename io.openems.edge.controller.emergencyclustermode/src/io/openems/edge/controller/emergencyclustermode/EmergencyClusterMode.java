@@ -1,6 +1,8 @@
 package io.openems.edge.controller.emergencyclustermode;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -33,6 +35,7 @@ import io.openems.edge.pvinverter.api.SymmetricPvInverter;
 public class EmergencyClusterMode extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
 	private final Logger log = LoggerFactory.getLogger(EmergencyClusterMode.class);
+	private final Clock clock;
 	
 	// defaults
 	private boolean isSwitchedToOffGrid = true;
@@ -91,6 +94,13 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 	private EssClusterWrapper cluster;
 	
 	
+	public EmergencyClusterMode() {
+		this(Clock.systemDefaultZone());
+	}
+
+	protected EmergencyClusterMode(Clock clock) {
+		this.clock = clock;
+	}
 	
 
 	@Activate
@@ -216,7 +226,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		    // it means that all ESS and PV needs to be switched to onGrid
 			try {
 				if (this.allEssDisconnected() && !this.pvOffGridSwitchChannel.value().getOrError() && !this.pvOnGridSwitchChannel.value().getOrError()) {
-					if (this.waitOn + this.switchDealy <= System.currentTimeMillis()) {
+					if (this.waitOn + this.switchDealy <= LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) {
 						this.primaryEssSwitch = false;
 						this.pvLimit = this.pvInverter.getActivePower().value().getOrError();
 						this.pvOnGridSwitch = true;
@@ -229,7 +239,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 					this.primaryEssSwitch = true;
 					this.backupEssSwitch = false;
 					this.pvOffGridSwitch = this.pvOnGridSwitch = false;
-					this.waitOn = System.currentTimeMillis();
+					this.waitOn =  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 				}
 			} catch (InvalidValueException e) {
 				this.log.error("Failed to switch to OnGrid mode because there are invalid values!", e);
@@ -263,7 +273,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 					if (this.allowChargeFromAC) {
 						// This is upper part of battery which is primarily used for charging during peak PV production (after 11:00h)
 						int reservedSoc = 50;
-						if (LocalDateTime.now().getHour() <= 11 && essSoc > 100 - reservedSoc && this.gridMeter.getActivePower().value().getOrError() < this.maxGridFeedPower) {
+						if (LocalDateTime.now(this.clock).getHour() <= 11 && essSoc > 100 - reservedSoc && this.gridMeter.getActivePower().value().getOrError() < this.maxGridFeedPower) {
 							//reduced charging formula – reduction based on current SOC and reservedSoc
 							calculatedEssActivePower = calculatedEssActivePower / (reservedSoc * 2) * (reservedSoc - (essSoc - (100 - reservedSoc)));
 						} else {
@@ -309,21 +319,22 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		if (this.isSwitchedToOffGrid) {
 			// the system detects that is is off grid and it is
 		    // switched to off gird mode
+			this.log.info("Switch to Off-Grid");
 			if (this.pvInverter.getActivePower().value().get() <= 35000 && this.pvMeter.getActivePower().value().get() <= 37000) {
-				if (this.lastPvOffGridDisconnected + this.pvSwitchDealy <= System.currentTimeMillis()) {
+				if (this.lastPvOffGridDisconnected + this.pvSwitchDealy <=  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) {
 					this.pvOffGridSwitch = true;
 				} else {
 					this.pvOffGridSwitch = false;
 				}
 			} else {
 				this.pvOffGridSwitch = false;
-				this.lastPvOffGridDisconnected = System.currentTimeMillis();
+				this.lastPvOffGridDisconnected =  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 			}
 			
 			try {
 				if (this.activeEss.getSoc().value().get() <= 5) {
 					if (this.allEssDisconnected()) {
-						if (this.waitOff + this.switchDealy <= System.currentTimeMillis()) {
+						if (this.waitOff + this.switchDealy <=  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) {
 							this.activeEss = this.backupEss;
 							this.backupEssSwitch = true;
 						} else {
@@ -333,16 +344,17 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 						this.primaryEssSwitch = true;
 						this.backupEssSwitch = false;
 						this.pvOffGridSwitch = false;
-						this.waitOff = System.currentTimeMillis();
+						this.waitOff =  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 					}
 				}
 				
-				// disconnect PV if active soc is >= 90%
+				// disconnect PV if active soc is >= 95%
 				if (this.activeEss.getSoc().value().get() >= 95) {
 					this.pvOffGridSwitch = false;
 				}
 				// reconnect PV if active soc goes under 75%
-				if (this.activeEss.getSoc().value().get() <= 75 && this.lastPvOffGridDisconnected + this.pvSwitchDealy <= System.currentTimeMillis() ) {
+				if (this.activeEss.getSoc().value().get() <= 75 && 
+						this.lastPvOffGridDisconnected + this.pvSwitchDealy <=  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) {
 					this.pvOffGridSwitch = true;
 				}
 			} catch (InvalidValueException e) {
@@ -355,7 +367,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 		    // it means that all ESS and PV needs to be switched to offGrid
 			try {
 				if (this.allEssDisconnected() && !this.pvOffGridSwitchChannel.value().get() && !this.pvOnGridSwitchChannel.value().get()) {
-					if (this.waitOff <= System.currentTimeMillis()) {
+					if (this.waitOff <=  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) {
 						this.primaryEssSwitch = false;
 						this.activeEss = this.primaryEss;
 						if (this.activeEss.getSoc().value().get() < 95 && this.pvInverter.getActivePower().value().get() <= 35000) {
@@ -368,7 +380,7 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 					this.backupEssSwitch = false;
 					this.pvOffGridSwitch = this.pvOnGridSwitch = false;
 					this.pvLimit = 35000;
-					this.waitOff = System.currentTimeMillis();
+					this.waitOff =  LocalDateTime.now(this.clock).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 				}
 			} catch (InvalidValueException e) {
 				this.log.error("Can't switch to OffGrid because there are invalid values!");
@@ -408,10 +420,10 @@ public class EmergencyClusterMode extends AbstractOpenemsComponent implements Co
 	 * @return boolean
 	 * */
 	private boolean allEssDisconnected() throws InvalidValueException {
-		if (this.primaryEssSwitchChannel.value().getOrError()) {
+		if (!this.primaryEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
-		if (!this.backupEssSwitchChannel.value().getOrError()) {
+		if (this.backupEssSwitchChannel.value().getOrError()) {
 			return false;
 		}
 		return true;
