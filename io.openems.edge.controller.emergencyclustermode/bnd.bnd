@@ -22,7 +22,6 @@ Private-Package:  \
 	io.openems.edge.ess.api;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.common;version=latest,\
-	io.openems.edge.pvinverter.api,\
 	io.openems.edge.meter.api,\
 	io.openems.edge.io.api
 
